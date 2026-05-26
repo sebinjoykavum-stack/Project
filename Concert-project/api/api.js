@@ -305,14 +305,15 @@ router.post('/Ticket_booking_api',verifyToken,async(req,res)=>{
 
     const {ConcertId,nooftickets}=req.body;
     
-    
+    //findig the details of specific concert
     const bkingConcert= await Concert.findOne({ConcertId:ConcertId});
       if(!bkingConcert){
         return res.status(404).json({message: "Concert not found"})
     }
+    //fetch the ticket price and multiply the amount by no of tickets
     const ticketPrice = bkingConcert.price;
     const TotalAmount = ticketPrice * nooftickets;
-    
+    //verification of token and extract user id and check whether user or admin
     const token=req.headers.authorization.split(' ')[1];
     const decoded = jwt.decode(token);
     const userId = decoded.userId;
@@ -321,7 +322,8 @@ router.post('/Ticket_booking_api',verifyToken,async(req,res)=>{
     if(Admin){
          return res.status(400).json({message:"Only users can book a ticket"})
      }
-    
+    // fetch the total tickets from collection of concert in db and also checking the the total number of tickets sold from ticket booking collection
+    //and check how much tickets are left
     const TotalTickets = bkingConcert.TotalTickets;
     const bookdetickt = await Ticket.aggregate([
         {$match:{ConcertId:ConcertId}},
@@ -330,7 +332,7 @@ router.post('/Ticket_booking_api',verifyToken,async(req,res)=>{
     const bkttl_tickets= bookdetickt[0]?.bkttl_tickets||0;
 
     const remaining_tickets= TotalTickets-bkttl_tickets;
-
+    // checking the no of tickets booked by the user  for the concert
     const concert_result = await Ticket.aggregate([
         {$match:{userId:userId, ConcertId:ConcertId}},
     {$group:{_id:null, totalTicketbukd:{$sum:"$nooftickets"}}}
