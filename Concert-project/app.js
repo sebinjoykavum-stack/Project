@@ -6,13 +6,20 @@ var logger = require('morgan');
 var bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var apiRouter = require('./api/api')
 
 const db= require('./database/db');
 
+// Fallback JWT secret key matching api.js
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'userSecretKey';
+
 var app = express();
+
+app.use(cors());
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
